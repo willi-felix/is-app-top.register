@@ -11,6 +11,33 @@ def get_zone_id(domain, headers):
         print(f"Failed to get zone ID for {domain}: {result}")
         exit(1)
 
+def sync_dns_records(data, zone_id, headers):
+    # Delete existing DNS records for the subdomain (if editing an existing subdomain)
+    response = requests.get(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records?name={data["subdomain"]}.{data["domain"]}', headers=headers)
+    existing_records = response.json()
+    if response.status_code == 200 and existing_records['success']:
+        for record in existing_records['result']:
+            delete_response = requests.delete(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record["id"]}', headers=headers)
+            if delete_response.status_code == 200:
+                print(f'Successfully deleted record {record["id"]}')
+            else:
+                print(f'Failed to delete record {record["id"]}: {delete_response.text}')
+
+    # Create new DNS records
+    for record_type, values in data['records'].items():
+        for value in values:
+            payload = {
+                'type': record_type,
+                'name': f"{data['subdomain']}.{data['domain']}",
+                'content': value,
+                'proxied': data['proxied']
+            }
+            response = requests.post(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records', headers=headers, json=payload)
+            if response.status_code == 200:
+                print(f'Successfully created {record_type} record for {data["subdomain"]}.{data["domain"]}')
+            else:
+                print(f'Failed to create {record_type} record for {data["subdomain"]}.{data["domain"]}: {response.text}')
+
 def deploy_subdomain(subdomain_file):
     with open(subdomain_file, 'r') as f:
         data = json.load(f)
@@ -22,30 +49,7 @@ def deploy_subdomain(subdomain_file):
     }
 
     zone_id = get_zone_id(data['domain'], headers)
-
-    response = requests.get(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records?name={data["subdomain"]}.{data["domain"]}', headers=headers)
-    existing_records = response.json()
-    if response.status_code == 200 and existing_records['success']:
-        for record in existing_records['result']:
-            delete_response = requests.delete(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record["id"]}', headers=headers)
-            if delete_response.status_code == 200:
-                print(f'Successfully deleted record {record["id"]}')
-            else:
-                print(f'Failed to delete record {record["id"]}: {delete_response.text}')
-
-    for record_type, values in data['records'].items():
-        for value in values:
-            payload = {
-                'type': record_type,
-                'name': data['subdomain'],
-                'content': value,
-                'proxied': data['proxied']
-            }
-            response = requests.post(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records', headers=headers, json=payload)
-            if response.status_code == 200:
-                print(f'Successfully created {record_type} record for {data["subdomain"]}')
-            else:
-                print(f'Failed to create {record_type} record for {data["subdomain"]}: {response.text}')
+    sync_dns_records(data, zone_id, headers)
 
 if __name__ == '__main__':
     subdomain_file = 'domains/{subdomain}.json'  # Replace with the actual path to the subdomain file
