@@ -23,6 +23,7 @@ def delete_subdomain(subdomain_file):
 
     zone_id = get_zone_id(data['domain'], headers)
 
+    # Delete existing DNS records for the subdomain
     response = requests.get(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records?name={data["subdomain"]}.{data["domain"]}', headers=headers)
     existing_records = response.json()
     if response.status_code == 200 and existing_records['success']:
