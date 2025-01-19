@@ -3,6 +3,7 @@ import json
 import requests
 
 def get_zone_id(domain, headers):
+    # Lấy ID của zone dựa trên tên miền
     response = requests.get(f'https://api.cloudflare.com/client/v4/zones?name={domain}', headers=headers)
     result = response.json()
     if response.status_code == 200 and result['success']:
@@ -12,6 +13,7 @@ def get_zone_id(domain, headers):
         exit(1)
 
 def delete_subdomain(subdomain, domain, headers):
+    # Xóa các bản ghi DNS cho subdomain
     zone_id = get_zone_id(domain, headers)
     response = requests.get(f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records?name={subdomain}.{domain}', headers=headers)
     existing_records = response.json()
@@ -35,7 +37,7 @@ if __name__ == '__main__':
         'Content-Type': 'application/json'
     }
 
-    # Check for deleted subdomains and clean up
+    # Kiểm tra và xóa các subdomains không còn tồn tại dưới dạng tệp JSON
     response = requests.get(f'https://api.cloudflare.com/client/v4/zones?name=is-app.top', headers=headers)
     result = response.json()
     if response.status_code == 200 and result['success']:
