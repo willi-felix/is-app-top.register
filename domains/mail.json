@@ -1,0 +1,11 @@
+{
+  "subdomain": "mail",
+  "domain": "is-app.top",
+  "email": "demo3546.us@gmail.com",
+  "github_username": "willi-felix",
+  "description": "The official email domain of is-app.top.",
+  "records": {
+    "A": ["1.0.0.1", "1.0.0.2"]
+  },
+  "proxied": true
+}
