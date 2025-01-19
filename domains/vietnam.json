@@ -1,0 +1,11 @@
+{
+  "subdomain": "vietnam",
+  "domain": "is-app.top",
+  "email": "user@example.com",
+  "github_username": "user",
+  "description": "A brief description of the purpose of the subdomain",
+  "records": {
+    "A": ["1.0.0.1", "1.0.0.2"]
+  },
+  "proxied": true
+}
