@@ -65,6 +65,11 @@ if __name__ == '__main__':
         deploy_subdomain(subdomain_file_path)
 
     # Check for deleted subdomains and clean up
+    cf_api_token = os.getenv('CF_API_TOKEN')
+    headers = {
+        'Authorization': f'Bearer {cf_api_token}',
+        'Content-Type': 'application/json'
+    }
     response = requests.get(f'https://api.cloudflare.com/client/v4/zones?name=is-app.top', headers=headers)
     result = response.json()
     if response.status_code == 200 and result['success']:
